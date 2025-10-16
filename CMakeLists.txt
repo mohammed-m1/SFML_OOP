@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.16...3.30)
+project(SFMLPROJECT)
+
+set(CMAKE_CXX_STANDARD 17)
+
+# Tell SFML we want to use static libraries (.a)
+set(SFML_STATIC_LIBRARIES TRUE)
+
+# Point to SFML's CMake folder
+set(SFML_DIR "C:/SFML/lib/cmake/SFML")
+
+# Find the correct components
+find_package(SFML 3 COMPONENTS Graphics Window System REQUIRED)
+
+# Add your main file
+add_executable(SFMLPROJECT main.cpp)
+
+# Link SFML libraries
+target_link_libraries(SFMLPROJECT PRIVATE SFML::Graphics SFML::Window SFML::System)
