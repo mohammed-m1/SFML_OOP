@@ -3,9 +3,9 @@
 #include <vector>
 
 int main() {
-    // 🟦 [1] CREATE A 1000×1000 WINDOW
+    // 1000 x 1000 window (main display)
     sf::RenderWindow window(sf::VideoMode(sf::Vector2u{1000, 1000}), "SFML Grid Centered");
-    window.setFramerateLimit(60);
+    // window.setFramerateLimit(60);
 
     // 🟨 [2] DEFINE THE INNER GRID SCREEN SIZE (800×600)
     const float screenWidth = 800.0f;
@@ -46,8 +46,23 @@ int main() {
     circle.setPosition(sf::Vector2f{offset.x + screenWidth - 50.0f, offset.y + screenHeight / 2.0f});
     float circleSpeed = -200.0f; // Move left
 
-    // 🟪 [7] PURPLE CIRCLES STORAGE
-    std::vector<sf::CircleShape> purpleCircles;
+    // 🟪 [7] COLOR SELECTION RECTANGLES
+    sf::RectangleShape brownRect(sf::Vector2f{50.0f, 50.0f});
+    brownRect.setFillColor(sf::Color(139, 69, 19)); // Brown
+    brownRect.setPosition(sf::Vector2f{offset.x + 50.0f, offset.y + screenHeight + 50.0f});
+    brownRect.setOutlineColor(sf::Color::Transparent);
+    brownRect.setOutlineThickness(2.0f);
+
+    sf::RectangleShape purpleRect(sf::Vector2f{50.0f, 50.0f});
+    purpleRect.setFillColor(sf::Color(128, 0, 128)); // Purple
+    purpleRect.setPosition(sf::Vector2f{offset.x + 110.0f, offset.y + screenHeight + 50.0f});
+    purpleRect.setOutlineColor(sf::Color::Transparent);
+    purpleRect.setOutlineThickness(2.0f);
+
+    // 🟪 [8] PLACED CIRCLES STORAGE AND COLOR SELECTION
+    std::vector<sf::CircleShape> placedCircles;
+    sf::Color selectedColor = sf::Color(128, 0, 128); // Default to purple
+    bool colorSelected = false; // Tracks if a color has been selected
 
     // Clock for delta time
     sf::Clock clock;
@@ -64,15 +79,33 @@ int main() {
             if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>()) {
                 if (mouseEvent->button == sf::Mouse::Button::Left) {
                     sf::Vector2f pos(static_cast<float>(mouseEvent->position.x), static_cast<float>(mouseEvent->position.y));
-                    // Check if click is within the grid
-                    if (pos.x >= offset.x && pos.x <= offset.x + screenWidth &&
-                        pos.y >= offset.y && pos.y <= offset.y + screenHeight) {
-                        if (purpleCircles.size() < 3) {
-                            sf::CircleShape purple(10.0f);
-                            purple.setFillColor(sf::Color(128, 0, 128)); // Purple
-                            purple.setOrigin(sf::Vector2f{10.0f, 10.0f});
-                            purple.setPosition(pos);
-                            purpleCircles.push_back(purple);
+
+                    // Check if clicking on brown rectangle
+                    if (brownRect.getGlobalBounds().contains(pos)) {
+                        selectedColor = sf::Color(139, 69, 19); // Select brown
+                        colorSelected = true;
+                        brownRect.setOutlineColor(sf::Color::White);
+                        purpleRect.setOutlineColor(sf::Color::Transparent);
+                    }
+                    // Check if clicking on purple rectangle
+                    else if (purpleRect.getGlobalBounds().contains(pos)) {
+                        selectedColor = sf::Color(128, 0, 128); // Select purple
+                        colorSelected = true;
+                        purpleRect.setOutlineColor(sf::Color::White);
+                        brownRect.setOutlineColor(sf::Color::Transparent);
+                    }
+                    // Check if clicking within the grid to place a circle
+                    else if (colorSelected && pos.x >= offset.x && pos.x <= offset.x + screenWidth &&
+                             pos.y >= offset.y && pos.y <= offset.y + screenHeight) {
+                        if (placedCircles.size() < 3) {
+                            sf::CircleShape newCircle(10.0f);
+                            newCircle.setFillColor(selectedColor);
+                            newCircle.setOrigin(sf::Vector2f{10.0f, 10.0f});
+                            newCircle.setPosition(pos);
+                            placedCircles.push_back(newCircle);
+                            colorSelected = false; // Reset color selection
+                            brownRect.setOutlineColor(sf::Color::Transparent);
+                            purpleRect.setOutlineColor(sf::Color::Transparent);
                         }
                     }
                 }
@@ -91,11 +124,11 @@ int main() {
         window.clear(sf::Color::Black);
         window.draw(grid);     // 🟨 draws the 800×600 grid
         window.draw(circle);   // 🟪 draws the cyan circle
-
-        // Draw purple circles
-        for (const auto& p : purpleCircles) {
-            window.draw(p);
+        for (const auto& p : placedCircles) {
+            window.draw(p);    // 🟪 draws placed circles
         }
+        window.draw(brownRect); // 🟫 draws the brown rectangle
+        window.draw(purpleRect); // 🟪 draws the purple rectangle
 
         window.display();
     }
