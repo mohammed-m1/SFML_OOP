@@ -22,5 +22,8 @@
             "icon": "terminal-bash"
         }
     },
-    "terminal.integrated.defaultProfile.windows": "MSYS2 MinGW 64-bit"
+    "terminal.integrated.defaultProfile.windows": "MSYS2 MinGW 64-bit",
+    "files.associations": {
+        "chrono": "cpp"
+    }
 }
