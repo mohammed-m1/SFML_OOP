@@ -479,7 +479,7 @@ int main() {
     if (gameState == GameState::Playing && currentWaveManager) {
     // --- Spawn next wave only if no active wave and more remain ---
     if (!waveActive && currentWaveManager->hasNextWave()) {
-        currentWaveManager->spawnNextWave(enemies, currentMap.pathCells);
+        currentWaveManager->spawnNextWave(enemies, currentMap.pathCells, offset);
         waveActive = true;
         ++shownWaveNo;
         waveText.setString("Wave " + std::to_string(shownWaveNo));

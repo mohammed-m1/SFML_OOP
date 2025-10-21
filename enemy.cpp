@@ -92,12 +92,19 @@ void enemy::set_health(int health){
 bool enemy::update(float dt, float gridSize, const sf::Vector2f& offset) {
     if (!isAlive() || path.empty()) return false;
 
-    if (currentPathIndex >= static_cast<int>(path.size()) - 1) {
-        // Enemy reached end of path
-        health = 0;
-        return true;  // ✅ reached end
+    // Wait until spawn delay expires
+    if (spawnTimer < spawnDelay) {
+        spawnTimer += dt;
+        return false;
     }
 
+    // If reached the end
+    if (currentPathIndex >= static_cast<int>(path.size()) - 1) {
+        health = 0;
+        return true;
+    }
+
+    // Move toward next cell
     sf::Vector2f targetPos = { 
         offset.x + path[currentPathIndex + 1].x * gridSize + gridSize / 2,
         offset.y + path[currentPathIndex + 1].y * gridSize + gridSize / 2 
@@ -118,6 +125,7 @@ bool enemy::update(float dt, float gridSize, const sf::Vector2f& offset) {
 
 
 
+
 void enemy::set_speed(int spd){
     this->speed = spd;
 }
@@ -127,6 +135,6 @@ void enemy::set_path(const std::vector<sf::Vector2i> pathcell){
     currentPathIndex = 0;
     // Use same grid/offset as main (50.f, {100,100}) – or pass in if you prefer.
     const float gridSize = 50.f;
-    const sf::Vector2f offset{100.f, 100.f};
-    set_position(cellToPixel(path.front(), gridSize, offset));
+    // const sf::Vector2f offset{100.f, 200.f};
+    // set_position(cellToPixel(path.front(), gridSize, offset));
 }
