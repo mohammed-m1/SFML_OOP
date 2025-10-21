@@ -13,7 +13,19 @@ set(SFML_DIR "C:/SFML/lib/cmake/SFML")
 find_package(SFML 3 COMPONENTS Graphics Window System REQUIRED)
 
 # Add your main file
-add_executable(SFMLPROJECT main.cpp)
+add_executable(SFMLPROJECT 
+    main.cpp
+    ballista.cpp
+    building.cpp
+    enemy.cpp
+    farm.cpp
+    goblin.cpp
+    mage_tower.cpp
+    ogre.cpp
+    player.cpp
+    skeleton.cpp
+    wave.cpp
+)
 
 # Link SFML libraries
 target_link_libraries(SFMLPROJECT PRIVATE SFML::Graphics SFML::Window SFML::System)
