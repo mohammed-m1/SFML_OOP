@@ -31,6 +31,8 @@
 
         int get_health();
 
+        void set_health(int health);
+
         void set_speed(int spd);
 
         std::string get_res();
@@ -47,7 +49,7 @@
 
         sf::CircleShape& get_shape();
 
-        void update(float dt, float gridSize = 50.f, const sf::Vector2f& offset = {100.f, 100.f});
+        bool update(float dt, float gridSize = 50.f, const sf::Vector2f& offset = {100.f, 100.f});
         // virtual ~enemy();
     };
     

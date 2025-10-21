@@ -85,35 +85,37 @@ void enemy::set_spawnDelay(float delay){
     this->spawnDelay = delay;
 };
 
+void enemy::set_health(int health){
+    this->health = health;
+}
 
-void enemy::update(float dt, float gridSize, const sf::Vector2f& offset) {
-   if (spawnTimer < spawnDelay) {
-        spawnTimer += dt;
-        return;
-    }
-
+bool enemy::update(float dt, float gridSize, const sf::Vector2f& offset) {
+    if (!isAlive() || path.empty()) return false;
 
     if (currentPathIndex >= static_cast<int>(path.size()) - 1) {
+        // Enemy reached end of path
         health = 0;
-        return;
+        return true;  // ✅ reached end
     }
 
-    // Target the next path cell
-    sf::Vector2f targetPos = cellToPixel(path[currentPathIndex + 1], gridSize, offset);
+    sf::Vector2f targetPos = { 
+        offset.x + path[currentPathIndex + 1].x * gridSize + gridSize / 2,
+        offset.y + path[currentPathIndex + 1].y * gridSize + gridSize / 2 
+    };
+
     sf::Vector2f dir = targetPos - position;
-
     float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-    if (dist < 0.5f) {
+
+    if (dist < 1.f) {
         currentPathIndex++;
-        if (currentPathIndex >= static_cast<int>(path.size()) - 1) {
-            health = 0;
-        }
-        return;
+        return false;
     }
 
-    dir /= dist;  // normalize direction
+    dir /= dist;
     set_position(position + dir * speed * dt);
+    return false;
 }
+
 
 
 void enemy::set_speed(int spd){

@@ -1,6 +1,6 @@
 #include "ballista.h"
 
-    ballista::ballista(int location) : building(17.5, 5, 3, "physical") {
+    ballista::ballista(int location) : building(5, 5, 3, "physical") {
         this->location = location;
         cost = 100;
         color = sf::Color(139, 69, 19); // brown

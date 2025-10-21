@@ -3,6 +3,7 @@
 #include "skeleton.h"
 #include "goblin.h"
 #include "ogre.h"
+#include <cmath>
 
 
 WaveManager::WaveManager(const std::vector<Wave>& waves_, float enemySpeed_) 
@@ -15,32 +16,46 @@ bool WaveManager::hasNextWave() const {
 void WaveManager::spawnNextWave(std::vector<enemy>& enemies, const std::vector<sf::Vector2i>& pathCells) {
     if (!hasNextWave()) return;
 
-    const sf::Vector2f offset((1000 - 800) / 2, (1000 - 600) / 2);
+    const sf::Vector2f offset((1000 - 800) / 2.f, (1000 - 600) / 2.f);
     auto cellToPixel = [&](const sf::Vector2i& cell)->sf::Vector2f {
         return { offset.x + cell.x * 50 + 25.f, offset.y + cell.y * 50 + 25.f };
     };
 
     const Wave& wave = waves[currentWaveIndex];
 
-    // Delay between individual enemy spawns
-    const float delayBetweenEnemies = 0.5f; // half a second per enemy
-    float currentDelay = 0.f;
+    const float spacing = 40.f; // distance between enemies
+    float startOffset = 0.f;    // accumulates spacing along path
 
-    auto spawnEnemyWithDelay = [&](auto&& createEnemy, int count) {
+    auto spawnEnemyType = [&](auto createEnemy, int count) {
         for (int i = 0; i < count; ++i) {
             auto e = createEnemy(1);
             e.set_path(pathCells);
             e.set_speed(enemySpeed);
-            e.set_position(cellToPixel(pathCells[0]));
-            e.set_spawnDelay(currentDelay);  // we'll use this field to delay movement
+
+            // Base position at start of path
+            sf::Vector2f base = cellToPixel(pathCells[0]);
+
+            // Direction of first segment
+            sf::Vector2f dir = {0.f,0.f};
+            if (pathCells.size() > 1) {
+                sf::Vector2f next = cellToPixel(pathCells[1]);
+                dir = next - base;
+                float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+                if (len > 0) dir /= len;
+            }
+
+            // Shift backward along path by current offset
+            sf::Vector2f pos = base - dir * startOffset;
+            e.set_position(pos);
+
             enemies.push_back(e);
-            currentDelay += delayBetweenEnemies;
+            startOffset += spacing; // increment spacing for next enemy and see if it worke
         }
     };
 
-    spawnEnemyWithDelay([](int q){ return skeleton(q); }, wave.skeletons);
-    spawnEnemyWithDelay([](int q){ return goblin(q); }, wave.goblins);
-    spawnEnemyWithDelay([](int q){ return ogre(q); }, wave.ogres);
+    spawnEnemyType([](int q){ return skeleton(q); }, wave.skeletons);
+    spawnEnemyType([](int q){ return goblin(q); }, wave.goblins);
+    spawnEnemyType([](int q){ return ogre(q); }, wave.ogres);
 
     currentWaveIndex++;
 }

@@ -30,6 +30,10 @@ public:
     void add_money(int money);
 
     void add_health(int health);
+    void set_money(int money);
+    void set_health(int health);
+
+
 };
 
 #endif

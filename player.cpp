@@ -4,7 +4,7 @@
 
     player::player(int difficulty) {
         this->difficulty = difficulty;
-        this->health = (10 - 2*(this->difficulty-1));
+        this->health = (15 - 2*(this->difficulty-1));
         this->money = (500);
     }
 
@@ -27,6 +27,14 @@
     void player::add_health(int add_health) {
         this->health = this->health + add_health;
     }
+
+    void player::set_money(int money){
+        this->money = money;
+    };
+    void player::set_health(int health){
+        this->health = health;
+    }
+
 
     //player::~player() {}
 

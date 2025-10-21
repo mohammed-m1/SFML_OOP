@@ -14,6 +14,7 @@
 #include "skeleton.h"
 #include "player.h"
 #include "wave.h"
+#include "player.h"
 
 
 
@@ -201,10 +202,10 @@ void handleMenuEvents(
 
 
 // handling for menu when m is pressed and placing by click and click to palce.
-#include "ballista.h"
-#include "mage_tower.h"
-#include "farm.h"
-#include "building.h"
+// #include "ballista.h"
+// #include "mage_tower.h"
+// #include "farm.h"
+// #include "building.h"
 
 void handleGameEvents(
     const sf::Event& event, GameState& state,
@@ -212,7 +213,8 @@ void handleGameEvents(
     const Map& currentMap, const sf::Vector2f& offset, float screenWidth, float screenHeight, float gridSize,
     sf::RectangleShape& brownRect, sf::RectangleShape& greenRect, sf::RectangleShape& purpleRect,
     int numCirclesAllowed,
-    std::vector<building*>& buildings // <--- added: actual placed buildings
+    std::vector<building*>& buildings, // <--- added: actual placed buildings
+    player& player1
 ) {
     // ===== Return to Main Menu =====
     if (const auto* keyPress = event.getIf<sf::Event::KeyPressed>()) {
@@ -286,8 +288,15 @@ void handleGameEvents(
                         newBuilding = new farm(buildings.size()); // Farm
                     }
                     if (newBuilding) {
-                        newBuilding->set_position(sf::Vector2f(centerX, centerY));
-                        buildings.push_back(newBuilding);
+                        // Check if player has enough money before placing
+                        if (player1.get_money() >= newBuilding->get_cost()) {
+                            player1.add_money(-newBuilding->get_cost()); // deduct cost
+                            newBuilding->set_position(sf::Vector2f(centerX, centerY));
+                            buildings.push_back(newBuilding);
+                        } else {
+                            delete newBuilding; // not enough money
+                            return; // cancel placement
+                        }
                     }
 
                     // ===== Visual Circle (Optional) =====
@@ -343,6 +352,9 @@ void drawGame(
 
 // 
 int main() {
+
+    player player1(1);
+
     sf::RenderWindow window(sf::VideoMode({1000, 1000}), "Tower Defence Game");
     window.setFramerateLimit(60);
     sf::Font font;
@@ -381,13 +393,13 @@ int main() {
 
     // Define waves for each map
     std::vector<Wave> map3Waves = { {6, 0, 0}, {3, 3, 1}, {2, 2, 2} };
-    std::vector<Wave> map1Waves = { {5, 0, 0}, {3, 2, 0}, {2, 3, 1} };
-    std::vector<Wave> map2Waves = { {4, 1, 0}, {2, 4, 1}, {3, 3, 2} };
+    std::vector<Wave> map1Waves = { {2, 4, 0}, {3, 2, 0}, {2, 3, 1} };
+    std::vector<Wave> map2Waves = { {4, 1, 1}, {2, 4, 1}, {3, 3, 2} };
     WaveManager* currentWaveManager = nullptr;
     bool waveActive = false;
     int shownWaveNo = 0;
 
-    float waveTimer = 0.f;
+    float waveTimer = 0.f;  
     // float timeBetweenWaves = 5.f; // 5 seconds between wav
 
 
@@ -400,7 +412,7 @@ int main() {
     bool colorSelected = false;
     int numCirclesAllowed = 6; // number of buildings that can be placed max
 
-    player player1(1);
+
 
     std::vector<building*> buildings;  ////// need to make projectile class tho now
     std::vector<enemy> enemies;
@@ -420,7 +432,7 @@ int main() {
 
     sf::Text waveText(font, "Wave 1", 30);
     waveText.setPosition(sf::Vector2f(offset.x + 10, offset.y - 40));
-    waveText.setFillColor(sf::Color::White);
+    waveText.setFillColor(sf::Color::Magenta);
 
     sf::Text moneyText( font, "Money : 0" ,18);
     moneyText.setPosition(sf::Vector2f(offset.x + 10, offset.y + screenHeight + 10));
@@ -431,12 +443,25 @@ int main() {
 
     healthText.setFillColor(sf::Color::Red);
 
-    const float enemyBasePixelsPerSecond = 40.f; // slow speed
+    const float enemyBasePixelsPerSecond = 70.f; // mid speed
     const float projectileSpeed = 350.f;
+
+    float farmTimer = 0.f;
+    const float farmInterval = 5.f; // 4 seconds per payout
+
 
     // main game loop
     while (window.isOpen()) {
     float dt = globalClock.restart().asSeconds(); // Delta time for updates
+    farmTimer += dt;
+    if (farmTimer >= farmInterval) {
+        for (auto* b : buildings) {
+            if (auto* f = dynamic_cast<farm*>(b)) {
+                player1.add_money(f->get_farmRate());
+            }
+        }
+        farmTimer = 0.f; // reset timer
+    }
 
     while (const std::optional<sf::Event> eventOpt = window.pollEvent()) {
         if (!eventOpt) continue;
@@ -448,7 +473,7 @@ int main() {
         else if (gameState == GameState::Playing)
             handleGameEvents(event, gameState, placedCircles, selectedColor, colorSelected,
                              currentMap, offset, screenWidth, screenHeight, gridSize,
-                             brownRect, greenRect, purpleRect, numCirclesAllowed, buildings);
+                             brownRect, greenRect, purpleRect, numCirclesAllowed, buildings,player1);
     }
 
     if (gameState == GameState::Playing && currentWaveManager) {
@@ -459,11 +484,51 @@ int main() {
         ++shownWaveNo;
         waveText.setString("Wave " + std::to_string(shownWaveNo));
     }
+    else if (!waveActive && !currentWaveManager->hasNextWave()) {
+    // All waves cleared — game over
+    sf::Text gameOverText(font, "All Waves Cleared! Returning to Main Menu...", 28);
+    gameOverText.setFillColor(sf::Color::Yellow);
+    gameOverText.setPosition({offset.x + 100, offset.y + 200});
+    
+    window.clear(sf::Color::Black);
+    window.draw(gameOverText);
+    window.display();
+
+    sf::sleep(sf::seconds(3)); // show message briefly
+
+    // ✅ Reset everything safelyF
+    enemies.clear();
+    projectiles.clear();
+    buildings.clear();
+    placedCircles.clear();
+
+    waveActive = false;
+    shownWaveNo = 0;
+    waveTimer = 0.f;
+
+    if (currentWaveManager) {
+        delete currentWaveManager;   // free memory
+        currentWaveManager = nullptr;
+    }
+
+    player1 = player();  // reset player (money + health)
+    moneyText.setString("Money: " + std::to_string(player1.get_money()));
+    healthText.setString("Health: " + std::to_string(player1.get_health()));
+
+    gameState = GameState::MainMenu;
+    player1.set_money(500);
+    player1.set_health(15);
+    continue; // restart loop to go back to menu
+}
 
     // --- Update all enemies along their paths ---
-    for (auto& e : enemies) {
-        e.update(dt, gridSize, offset);
+   for (auto& e : enemies) {
+    bool reachedEnd = e.update(dt, gridSize, offset);
+    if (reachedEnd) {
+        player1.add_health(-(e.get_damage())); // ✅ lose health based on enemy
+        // e.take_damage(9999, "none");          // kill the enemy to remove it
     }
+}
 
     // --- Check if current wave has been cleared ---
     if (waveActive) {
@@ -483,11 +548,74 @@ int main() {
 
     // --- Update towers and their projectiles ---
     updateBuildingsAndProjectiles(buildings, enemies, projectiles, dt, projectileSpeed, player1);
+    // Update UI values dynamically
+    moneyText.setString("Money: " + std::to_string(player1.get_money()));
+    healthText.setString("Health: " + std::to_string(player1.get_health()));
+
+    if (player1.get_health() <= 0) {
+    sf::Text gameOverText(font, "You Lost! Returning to Main Menu...", 28);
+    gameOverText.setFillColor(sf::Color::Red);
+    gameOverText.setPosition({offset.x + 100, offset.y + 200});
+
+    window.clear(sf::Color::Black);
+    window.draw(gameOverText);
+    window.display();
+    sf::sleep(sf::seconds(3));
+
+    enemies.clear();
+    projectiles.clear();
+    buildings.clear();
+    placedCircles.clear();
+
+    waveActive = false;
+    shownWaveNo = 0;
+    waveTimer = 0.f;
+
+    if (currentWaveManager) {
+        delete currentWaveManager;
+        currentWaveManager = nullptr;
+    }
+
+    player1 = player();
+    moneyText.setString("Money: " + std::to_string(player1.get_money()));
+    healthText.setString("Health: " + std::to_string(player1.get_health()));
+    player1.set_money(500);
+    player1.set_health(15);
+
+    gameState = GameState::MainMenu;
+    continue;
+}
+
 
     // --- Move projectiles ---
     for (auto& p : projectiles) {
         p.shape.move(p.velocity * dt);
     }
+    for (auto& p : projectiles) {
+    for (auto& e : enemies) {
+        if (!e.isAlive()) continue;
+
+        float dist = distance(p.shape.getPosition(), e.get_position());
+        float hitRadius = 15.f; // adjust as needed
+        if (dist < hitRadius) {
+            e.take_damage(static_cast<int>(p.damage), p.damType);
+
+            // If enemy dies -> reward player
+            if (!e.isAlive()) {
+                player1.add_money(20); // reward per kill
+            }
+
+            // "Destroy" projectile (move off-screen for now)
+            p.shape.setPosition({-100.f, -100.f});
+            break; // projectile hits only one enemy
+        }
+    }
+}
+    projectiles.erase(std::remove_if(projectiles.begin(), projectiles.end(),
+        [&](const Projectile& p) {
+            sf::Vector2f pos = p.shape.getPosition();
+            return (pos.x < 0 || pos.x > 1000 || pos.y < 0 || pos.y > 1000);
+        }), projectiles.end());
 }
 
 // --- Drawing section ---
@@ -510,6 +638,10 @@ else {
     for (auto& p : projectiles) {
         window.draw(p.shape);
     }
+    window.draw(moneyText);
+    window.draw(healthText);
+    window.draw(moneyText);
+    window.draw(waveText);
 }
 
 window.display();

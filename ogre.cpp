@@ -1,7 +1,7 @@
 #include "ogre.h"
 #include <SFML/Graphics.hpp>
 
-ogre::ogre(int quantity) : enemy(quantity, 5, 50, "physical") {
+ogre::ogre(int quantity) : enemy(quantity, 5, 200, "physical") {
     this->quantity = quantity;
     shape.setFillColor(sf::Color(128, 64, 0)); // brownish
 }

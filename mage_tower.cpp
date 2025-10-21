@@ -1,6 +1,6 @@
 #include "mage_tower.h"
 
-    mage_tower::mage_tower(int location) : building(10, 4, 6, "magic") {
+    mage_tower::mage_tower(int location) : building(4, 4, 6, "magic") {
         // add_money(-150);
         this->location = location;
         this->cost = 150;

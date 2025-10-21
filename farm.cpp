@@ -2,8 +2,8 @@
 
     farm::farm(int location) : building(0, 0, 0, "physical") {
         this->location = location;
-        farmRate = 100; //per round
-        cost = 75;
+        farmRate = 60; //per 5sec
+        cost = 100;
         color = sf::Color(0, 100, 0); // green
     }
 
