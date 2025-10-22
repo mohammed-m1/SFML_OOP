@@ -18,7 +18,7 @@
 
 
 
-class Projectile {
+class Projectile { //quick getting all the info
     public:
         sf::CircleShape shape;
         sf::Vector2f velocity;
@@ -26,41 +26,46 @@ class Projectile {
         std::string damType;
 };
 
+//projectile calcs distance between 2 points. find the nearest target use
 float distance(const sf::Vector2f& a, const sf::Vector2f& b) {
     sf::Vector2f d = a - b;
-    return sqrt(d.x * d.x + d.y * d.y);
+    return sqrt(d.x * d.x + d.y * d.y); //pytahgroas
 }
-
+// unit legnth vecrotr for computing.    finds direction to make speed constant otehrwise skeweed.
 sf::Vector2f normalize(const sf::Vector2f& v) {
     float len = sqrt(v.x * v.x + v.y * v.y);
     if (len == 0) return {0, 0};
     return v / len;
 }
 
-
+// updates the towers and buildings role like money generation or the damage projectiles thing
 void updateBuildingsAndProjectiles(
     std::vector<building*>& buildings,
     std::vector<enemy>& enemies,
     std::vector<Projectile>& projectiles,
-    float dt,
+    float dt,  //frametime timeline
     float projectileSpeed,
     player& player1
 ) {
-    for (auto* b : buildings) {
-        // Farms do not shoot
-    b->update_shot_timer(dt);
-    if (dynamic_cast<farm*>(b)) {
-        player1.add_money(static_cast<farm*>(b)->get_farmRate() * dt / 5.f);
+    for (auto* b : buildings) { // make it a pointer and real data type like farm or mage basis sam e as for (building* b : buildings) { }
+        //auto lets the compiler deduce the exact type automatically; used for cleaner code and flexibility
+
+    b->update_shot_timer(dt); //update shot timing for individual cool down of of tower
+    if (dynamic_cast<farm*>(b)) {// dynamic cast run time safety cuz of errors faced so likw when farm is the b farm is run cuz it acts diff
+        player1.add_money(static_cast<farm*>(b)->get_farmRate() * dt / 5.f); // need specifc time only.
         continue; // skip projectile firing logic
     }
 
-    if (!b->ready_to_fire()) continue;
-
+    if (!b->ready_to_fire()){
+        continue;
+    } ;
         // Find nearest enemy   
         enemy* target = nullptr;
-        float bestDist = 1e9;
+        float bestDist = 1e9; //BIG NUMBER LOGIC    
         for (auto& e : enemies) {
-            if (!e.isAlive()) continue;
+            if (!e.isAlive()){ 
+                continue;    ////////HUMANZIE THIS SHIT WTG
+            }
             float d = distance(b->get_position(), e.get_position());
             if (d <= b->get_range() * 50 && d < bestDist) { // range in tiles
                 target = &e;
@@ -68,33 +73,33 @@ void updateBuildingsAndProjectiles(
             }
         }
 
-        if (target) {
+        if (target) {// target is found and so make a projecteclile to hit it
             Projectile p;
             p.shape = sf::CircleShape(5.f);
             p.shape.setOrigin({5.f, 5.f});
             p.shape.setPosition(b->get_position());
-            sf::Vector2f dir = normalize(target->get_position() - b->get_position());
+            sf::Vector2f dir = normalize(target->get_position() - b->get_position()); //find direction towards it and then shoot
             p.velocity = dir * projectileSpeed;
             p.damage = b->get_damage();
             p.damType = b->get_damageType();
             projectiles.push_back(p);
-            b->reset_shot_timer();
+            b->reset_shot_timer(); //cooldown
         }
 
         // Special case: farms generate money
-        if (dynamic_cast<farm*>(b)) {
-            player1.add_money(static_cast<farm*>(b)->get_farmRate() * dt / 5.f);
-        }
+        // if (dynamic_cast<farm*>(b)) {
+        //     player1.add_money(static_cast<farm*>(b)->get_farmRate() * dt / 5.f);
+        // }
     }
 }
 
 
-// Comparator for sf::Vector2i in std::set so i can use it for comparing in allowed placements as idek why they dont have a comparing operatorinsfml
+// Comparator for sf::
 class Vector2iComparator {
     public:
         bool operator()(const sf::Vector2i& lhs, const sf::Vector2i& rhs) const {
             if (lhs.x != rhs.x) return lhs.x < rhs.x;
-            return lhs.y < rhs.y;
+            return lhs.y < rhs.y; // return true useed to see if x and y are small of this vector
         }
 };
 
@@ -109,11 +114,11 @@ public:
 // 
 Map map1() {
     Map m;
-    for (int col = 0; col < 6; ++col) m.pathCells.push_back({col, 3}); //appends the coordinates/blocks for making the map in loop
-    for (int row = 3; row < 9; ++row) m.pathCells.push_back({5, row});
-    for (int col = 5; col < 11; ++col) m.pathCells.push_back({col, 8});
-    for (int row = 8; row > 2; --row) m.pathCells.push_back({10, row});
-    for (int col = 11; col < 16; ++col) m.pathCells.push_back({col, 3});
+    for (int col = 0; col < 6; col++) m.pathCells.push_back({col, 3}); //appends the coordinates/blocks for making the map in loop
+    for (int row = 3; row < 9; row++) m.pathCells.push_back({5, row});
+    for (int col = 5; col < 11; col++) m.pathCells.push_back({col, 8});
+    for (int row = 8; row > 2; row--) m.pathCells.push_back({10, row});
+    for (int col = 11; col < 16; col++) m.pathCells.push_back({col, 3});
     m.allowedPlacements = {{3,4},{3,5},{4,4},{4,5},{7,6},{7,7},{8,6},{8,7},{11,4},{11,5},{12,4},{12,5}}; //places wehre you can place.
     return m;
 }
@@ -127,19 +132,19 @@ Map map2() {
 
 Map map3() {
     Map m;
-    for (int col = 0; col < 7; ++col) m.pathCells.push_back({col, 9});
-    for (int row = 9; row > 1; --row) m.pathCells.push_back({6, row});
-    for (int col = 6; col < 16; ++col) m.pathCells.push_back({col, 2});
+    for (int col = 0; col < 7; col++) m.pathCells.push_back({col, 9});
+    for (int row = 9; row > 1; row--) m.pathCells.push_back({6, row});
+    for (int col = 6; col < 16; col++) m.pathCells.push_back({col, 2});
     m.allowedPlacements = {{5,5},{5,6},{5,7},{5,8},{7,3},{7,4},{8,3},{8,4}};
     return m;
 }
 
-//  call by ref so i can modify adn use it, gmaes name and 1,2,3 guide
+//  call by ref so i can modify adn use it, gmaes name and 1,2,3 guide draw the tile and menu text
 void drawMainMenu(sf::RenderWindow& window, sf::Font& font) {
     sf::Text title(font, "Tower Defence Game", 40);
     title.setFillColor(sf::Color::White);
-    title.setPosition(sf::Vector2f((1000.f ) / 2.f, 300.f)); // i remvoed the minus sgin thing og is 
-    title.setPosition(sf::Vector2f((1000.f - ( title.getLocalBounds().size.x - title.getLocalBounds().position.x)) / 2.f, 300.f));
+    title.setPosition(sf::Vector2f((1000.f ) / 2.f, 300.f));
+    title.setPosition(sf::Vector2f((1000.f - ( title.getLocalBounds().size.x - title.getLocalBounds().position.x)) / 2.f, 300.f)); //centre the text
 
 
 
@@ -152,15 +157,15 @@ void drawMainMenu(sf::RenderWindow& window, sf::Font& font) {
     window.draw(prompt);
 }
 
-// makes the grid lines by using the vertices and returns it
+// makes the grid lines by using the vertices and returns the array with all the lines fr grid
 sf::VertexArray makeDisplay(float screenWidth, float screenHeight, int gridWidth, float gridSize, int gridHeight, const sf::Vector2f& offset) {
     sf::VertexArray grid(sf::PrimitiveType::Lines);
-    for (int x = 0; x <= gridWidth; ++x) {
+    for (int x = 0; x <= gridWidth; x++) {
         float xpos = x * gridSize + offset.x;
         grid.append(sf::Vertex{ sf::Vector2f(xpos, offset.y), sf::Color::Green });
         grid.append(sf::Vertex{ sf::Vector2f(xpos, offset.y + screenHeight), sf::Color::Green });
     }
-    for (int y = 0; y <= gridHeight; ++y) {
+    for (int y = 0; y <= gridHeight; y++) {
         float ypos = y * gridSize + offset.y;
         grid.append(sf::Vertex{ sf::Vector2f(offset.x, ypos), sf::Color::Green });
         grid.append(sf::Vertex{ sf::Vector2f(offset.x + screenWidth,  ypos), sf::Color::Green });
@@ -168,7 +173,7 @@ sf::VertexArray makeDisplay(float screenWidth, float screenHeight, int gridWidth
     return grid;
 }
 
-// enum type for only having 2 options.
+// enum type for only having 2 options mutualy exclusiive.
 enum class GameState { MainMenu, Playing };
 
 // to get the game from main menu to the map using keys pressed.
@@ -200,13 +205,7 @@ void handleMenuEvents(
     }
 }
 
-
-// handling for menu when m is pressed and placing by click and click to palce.
-// #include "ballista.h"
-// #include "mage_tower.h"
-// #include "farm.h"
-// #include "building.h"
-
+// m menu go to menu section
 void handleGameEvents(
     const sf::Event& event, GameState& state,
     std::vector<sf::CircleShape>& placedCircles, sf::Color& selectedColor, bool& colorSelected,
@@ -216,7 +215,7 @@ void handleGameEvents(
     std::vector<building*>& buildings, // <--- added: actual placed buildings
     player& player1
 ) {
-    // ===== Return to Main Menu =====
+    // main menu code
     if (const auto* keyPress = event.getIf<sf::Event::KeyPressed>()) {
         if (keyPress->scancode == sf::Keyboard::Scan::M) {
             state = GameState::MainMenu;
@@ -230,35 +229,35 @@ void handleGameEvents(
         }
     }
 
-    // ===== Mouse Click Handling =====
+    // placing buildings click mouse 
     if (const auto* mouseButton = event.getIf<sf::Event::MouseButtonPressed>()) {
         if (mouseButton->button == sf::Mouse::Button::Left) {
             sf::Vector2f pos(static_cast<float>(mouseButton->position.x),
                              static_cast<float>(mouseButton->position.y));
 
-            // Reset UI outlines
+            // graphic border thing
             brownRect.setOutlineColor(sf::Color::Transparent);
             greenRect.setOutlineColor(sf::Color::Transparent);
             purpleRect.setOutlineColor(sf::Color::Transparent);
 
-            // ===== Color (Building Type) Selection =====
+            // select building 
             if (brownRect.getGlobalBounds().contains(pos)) {
-                selectedColor = sf::Color(139, 69, 19); // Brown -> Ballista
+                selectedColor = sf::Color(139, 69, 19); // Brown  Ballista
                 colorSelected = true;
                 brownRect.setOutlineColor(sf::Color::White);
             } 
             else if (greenRect.getGlobalBounds().contains(pos)) {
-                selectedColor = sf::Color(0, 100, 0); // Green -> Farm
+                selectedColor = sf::Color(0, 100, 0); // Green  Farm
                 colorSelected = true;
                 greenRect.setOutlineColor(sf::Color::White);
             } 
             else if (purpleRect.getGlobalBounds().contains(pos)) {
-                selectedColor = sf::Color(128, 0, 128); // Purple -> Mage Tower
+                selectedColor = sf::Color(128, 0, 128); // Purple  Mage Tower
                 colorSelected = true;
                 purpleRect.setOutlineColor(sf::Color::White);
             } 
 
-            // ===== Placement Logic =====
+            // place building in the centre of the box
             else if (colorSelected &&
                      pos.x >= offset.x && pos.x <= offset.x + screenWidth &&
                      pos.y >= offset.y && pos.y <= offset.y + screenHeight)
@@ -267,25 +266,24 @@ void handleGameEvents(
                 int cellY = static_cast<int>((pos.y - offset.y) / gridSize);
                 sf::Vector2i cell(cellX, cellY);
 
-                // Check placement validity
+                // Check placement possible if there is correct box and total building is less. size allows to not keep a count of it
                 if (buildings.size() < numCirclesAllowed && currentMap.allowedPlacements.count(cell)) {
                     float centerX = offset.x + cellX * gridSize + gridSize / 2.0f;
                     float centerY = offset.y + cellY * gridSize + gridSize / 2.0f;
 
-                    // ===== Create Building =====
+                    // create it bldg
                     building* newBuilding = nullptr;
 
                     if (selectedColor == sf::Color(139, 69, 19)) {
                         newBuilding = new ballista(buildings.size()); // Ballista
                     }
-                    // CURRENTLY WRONG: green -> farm, purple -> mage
+                    
 
-                    // FIX: green -> mage, purple -> farm
                     else if (selectedColor == sf::Color(0, 100, 0)) {
-                        newBuilding = new mage_tower(buildings.size()); // Mage
+                        newBuilding = new mage_tower(buildings.size()); // farm
                     }
                     else if (selectedColor == sf::Color(128, 0, 128)) {
-                        newBuilding = new farm(buildings.size()); // Farm
+                        newBuilding = new farm(buildings.size()); // mage
                     }
                     if (newBuilding) {
                         // Check if player has enough money before placing
@@ -295,18 +293,18 @@ void handleGameEvents(
                             buildings.push_back(newBuilding);
                         } else {
                             delete newBuilding; // not enough money
-                            return; // cancel placement
+                            return; // cancel it
                         }
                     }
 
-                    // ===== Visual Circle (Optional) =====
+                    // circle visual of bldf
                     sf::CircleShape newCircle(10.0f);
                     newCircle.setFillColor(selectedColor);
                     newCircle.setOrigin({10.0f, 10.0f});
                     newCircle.setPosition({centerX, centerY});
                     placedCircles.push_back(newCircle);
 
-                    // Reset color selection
+                    // Reset color  
                     colorSelected = false;
                     brownRect.setOutlineColor(sf::Color::Transparent);
                     greenRect.setOutlineColor(sf::Color::Transparent);
@@ -400,9 +398,6 @@ int main() {
     int shownWaveNo = 0;
 
     float waveTimer = 0.f;  
-    // float timeBetweenWaves = 5.f; // 5 seconds between wav
-
-
 
     // Game state and playing
     GameState gameState = GameState::MainMenu;
@@ -414,21 +409,11 @@ int main() {
 
 
 
-    std::vector<building*> buildings;  ////// need to make projectile class tho now
+    std::vector<building*> buildings;  ////// array of builidng point datatype 
     std::vector<enemy> enemies;
     std::vector<Projectile> projectiles;
 
     sf::Clock globalClock;
-    // float spawnInterval = 0.5f; // seconds between spawns
-    // float lastSpawnTime = 0.0f;
-    // int spawnPerWave = 10; // base number per wave (increases)
-    // int spawnedCount = 0;
-    // int currentWave = 1;
-
-    // ////spawn help func cuz it idint work
-    // auto cellToPixel = [&](const sf::Vector2i& cell)->sf::Vector2f {
-    //     return { offset.x + cell.x * gridSize + gridSize/2.f, offset.y + cell.y * gridSize + gridSize/2.f };
-    // };
 
     sf::Text waveText(font, "Wave 1", 30);
     waveText.setPosition(sf::Vector2f(offset.x + 10, offset.y - 40));
@@ -452,36 +437,40 @@ int main() {
 
     // main game loop
     while (window.isOpen()) {
-    float dt = globalClock.restart().asSeconds(); // Delta time for updates
+    float dt = globalClock.restart().asSeconds(); // Delta time is time passed since last frame....  perframe time
     farmTimer += dt;
     if (farmTimer >= farmInterval) {
-        for (auto* b : buildings) {
-            if (auto* f = dynamic_cast<farm*>(b)) {
+        for (auto* b : buildings) { ///auto =  fast way for compiler to checlk the type
+            if (auto* f = dynamic_cast<farm*>(b)) { // virtual in base safe runtime check
                 player1.add_money(f->get_farmRate());
             }
         }
         farmTimer = 0.f; // reset timer
     }
 
-    while (const std::optional<sf::Event> eventOpt = window.pollEvent()) {
+    while (const std::optional<sf::Event> eventOpt = window.pollEvent()) { //gives the event handling in the window
         if (!eventOpt) continue;
         const sf::Event& event = *eventOpt;
 
-        if (event.is<sf::Event::Closed>()) window.close();
-        else if (gameState == GameState::MainMenu)
+        if (event.is<sf::Event::Closed>()){
+             window.close(); // close window
+        }
+        else if (gameState == GameState::MainMenu) {
             handleMenuEvents(event, gameState, currentMap, currentWaveManager, map1Waves, map2Waves, map3Waves);
-        else if (gameState == GameState::Playing)
+        }
+        else if (gameState == GameState::Playing) {
             handleGameEvents(event, gameState, placedCircles, selectedColor, colorSelected,
                              currentMap, offset, screenWidth, screenHeight, gridSize,
                              brownRect, greenRect, purpleRect, numCirclesAllowed, buildings,player1);
+            }
     }
 
     if (gameState == GameState::Playing && currentWaveManager) {
-    // --- Spawn next wave only if no active wave and more remain ---
+    //Spawn next wave only if no active wave and more remain 
     if (!waveActive && currentWaveManager->hasNextWave()) {
         currentWaveManager->spawnNextWave(enemies, currentMap.pathCells, offset);
         waveActive = true;
-        ++shownWaveNo;
+        shownWaveNo++;
         waveText.setString("Wave " + std::to_string(shownWaveNo));
     }
     else if (!waveActive && !currentWaveManager->hasNextWave()) {
@@ -494,9 +483,9 @@ int main() {
     window.draw(gameOverText);
     window.display();
 
-    sf::sleep(sf::seconds(3)); // show message briefly
+    sf::sleep(sf::seconds(3)); 
 
-    // ✅ Reset everything safelyF
+    // clear all
     enemies.clear();
     projectiles.clear();
     buildings.clear();
@@ -507,7 +496,7 @@ int main() {
     waveTimer = 0.f;
 
     if (currentWaveManager) {
-        delete currentWaveManager;   // free memory
+        delete currentWaveManager;   // free
         currentWaveManager = nullptr;
     }
 
@@ -521,16 +510,16 @@ int main() {
     continue; // restart loop to go back to menu
 }
 
-    // --- Update all enemies along their paths ---
-   for (auto& e : enemies) {
+    // Update all enemies along their paths 
+   for (auto& e : enemies) { // make data type easier 
     bool reachedEnd = e.update(dt, gridSize, offset);
     if (reachedEnd) {
-        player1.add_health(-(e.get_damage())); // ✅ lose health based on enemy
+        player1.add_health(-(e.get_damage())); // player takes damage
         // e.take_damage(9999, "none");          // kill the enemy to remove it
     }
 }
 
-    // --- Check if current wave has been cleared ---
+    // Check if current wave has been cleared 
     if (waveActive) {
         bool anyAlive = false;
         for (auto& e : enemies) {
@@ -542,13 +531,13 @@ int main() {
 
         if (!anyAlive) {
             enemies.clear();       // cleanup dead enemies
-            waveActive = false;    // allow the next wave to start
+            waveActive = false;    // start wave
         }
     }
 
-    // --- Update towers and their projectiles ---
+    // Update towers and their projectiles
     updateBuildingsAndProjectiles(buildings, enemies, projectiles, dt, projectileSpeed, player1);
-    // Update UI values dynamically
+    // Update UI 
     moneyText.setString("Money: " + std::to_string(player1.get_money()));
     healthText.setString("Health: " + std::to_string(player1.get_health()));
 
@@ -561,7 +550,7 @@ int main() {
     window.draw(gameOverText);
     window.display();
     sf::sleep(sf::seconds(3));
-
+        ///reset if lost 
     enemies.clear();
     projectiles.clear();
     buildings.clear();
@@ -587,7 +576,7 @@ int main() {
 }
 
 
-    // --- Move projectiles ---
+    // Move projectiles
     for (auto& p : projectiles) {
         p.shape.move(p.velocity * dt);
     }
@@ -598,14 +587,14 @@ int main() {
         float dist = distance(p.shape.getPosition(), e.get_position());
         float hitRadius = 15.f; // adjust as needed
         if (dist < hitRadius) {
-            e.take_damage(static_cast<int>(p.damage), p.damType);
+            e.take_damage(static_cast<int>(p.damage), p.damType);  //static cuz 100% sure this is int and muist be int
 
-            // If enemy dies -> reward player
+            // If enemy dies give money
             if (!e.isAlive()) {
                 player1.add_money(20); // reward per kill
             }
 
-            // "Destroy" projectile (move off-screen for now)
+            //  rmemove projectile (move off-screen for now) kinda is weird way
             p.shape.setPosition({-100.f, -100.f});
             break; // projectile hits only one enemy
         }
@@ -615,7 +604,7 @@ int main() {
         [&](const Projectile& p) {
             sf::Vector2f pos = p.shape.getPosition();
             return (pos.x < 0 || pos.x > 1000 || pos.y < 0 || pos.y > 1000);
-        }), projectiles.end());
+        }), projectiles.end()); // same logic if outside the screen then remove it 
 }
 
 // --- Drawing section ---

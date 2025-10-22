@@ -90,36 +90,36 @@ void enemy::set_health(int health){
 }
 
 bool enemy::update(float dt, float gridSize, const sf::Vector2f& offset) {
-    if (!isAlive() || path.empty()) return false;
+    if (!isAlive() || path.empty()) return false;  //dead OR path has error
 
-    // Wait until spawn delay expires
+    // Wait until spawn delay expires to spwan and not cram
     if (spawnTimer < spawnDelay) {
         spawnTimer += dt;
         return false;
     }
 
     // If reached the end
-    if (currentPathIndex >= static_cast<int>(path.size()) - 1) {
+    if (currentPathIndex >= static_cast<int>(path.size()) - 1) { //reached end, die and damage.
         health = 0;
         return true;
     }
 
-    // Move toward next cell
+    // Move toward next cells/grids center
     sf::Vector2f targetPos = { 
         offset.x + path[currentPathIndex + 1].x * gridSize + gridSize / 2,
         offset.y + path[currentPathIndex + 1].y * gridSize + gridSize / 2 
     };
 
-    sf::Vector2f dir = targetPos - position;
-    float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+    sf::Vector2f dir = targetPos - position; //direction
+    float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y); //find distance ti next box
 
-    if (dist < 1.f) {
+    if (dist < 1.f) { //close so increment so it goes to the next box   
         currentPathIndex++;
         return false;
     }
 
-    dir /= dist;
-    set_position(position + dir * speed * dt);
+    dir = dir/dist; //normlaize it fancy way to write htis code
+    set_position(position + dir * speed * dt); // mover distance by using d = s*t
     return false;
 }
 

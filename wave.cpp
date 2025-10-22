@@ -12,7 +12,7 @@ void WaveManager::spawnNextWave(std::vector<enemy>& enemies,
                                 const std::vector<sf::Vector2i>& pathCells,
                                 const sf::Vector2f& offset)
 {
-    if (!hasNextWave() || pathCells.empty()) return;
+    if (!hasNextWave() || pathCells.empty()) return; // check if there is more lft
 
     const float gridSize = 50.f;
 
@@ -29,7 +29,7 @@ void WaveManager::spawnNextWave(std::vector<enemy>& enemies,
     float nextDelay = 0.f;
 
     auto spawnEnemyType = [&](auto makeEnemy, int count) {
-        for (int i = 0; i < count; ++i) {
+        for (int i = 0; i < count; i++) {
             auto e = makeEnemy(1);
             e.set_path(pathCells);
             e.set_speed(enemySpeed);
