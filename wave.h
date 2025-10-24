@@ -25,7 +25,7 @@ public:
 
     bool hasNextWave() const;
 
-    // Single, canonical spawn function
+    //  spawn function for waves
     void spawnNextWave(std::vector<enemy>& enemies,
                        const std::vector<sf::Vector2i>& pathCells,
                        const sf::Vector2f& offset);

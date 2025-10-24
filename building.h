@@ -59,14 +59,16 @@ public:
 
     // void set_priority(std::string priority);
 
-    virtual void upgrade();
+    // virtual void upgrade();
 
     // virtual void attack(int enemy);
     void reset_shot_timer();
 
     void update_shot_timer(float dt); //if it shoots then we need to fin trime delay for next shot then
     
-    bool ready_to_fire() const; //true if it is
+    bool ready_to_fire() const; //true if it is also 
+
+    virtual void upgrade() = 0; // abstract for upgradsing
 
 
 };

@@ -3,7 +3,9 @@
 #include <vector> //dsa
 #include <set> //dsa
 #include <algorithm> //for std::ifnd
+#include <fstream>
 #include <cmath>
+#include <iostream>
 #include "ballista.h"
 #include "farm.h"
 #include "building.h"
@@ -36,6 +38,21 @@ sf::Vector2f normalize(const sf::Vector2f& v) {
     float len = sqrt(v.x * v.x + v.y * v.y);
     if (len == 0) return {0, 0};
     return v / len;
+}
+
+void saveGame(const std::vector<building*>& buildings, const player& player1, int shownWaveNo) {
+        try { //try catch 
+        std::ofstream file("save.txt");
+        if (!file) throw std::runtime_error("Failed to open save file");
+
+        file << player1.get_money() << " "
+             << player1.get_health() << " "
+             << shownWaveNo << "\n";
+
+        std::cout << "Game saved successfully.\n";
+    } catch (const std::exception& e) {
+        std::cerr << "Error saving game: " << e.what() << "\n";
+    }
 }
 
 // updates the towers and buildings role like money generation or the damage projectiles thing
@@ -73,7 +90,7 @@ void updateBuildingsAndProjectiles(
             }
         }
 
-        if (target) {// target is found and so make a projecteclile to hit it
+        if (target) {// target is found and so make a projecteclile to hit it and shooting logic ish
             Projectile p;
             p.shape = sf::CircleShape(5.f);
             p.shape.setOrigin({5.f, 5.f});
@@ -212,15 +229,31 @@ void handleGameEvents(
     const Map& currentMap, const sf::Vector2f& offset, float screenWidth, float screenHeight, float gridSize,
     sf::RectangleShape& brownRect, sf::RectangleShape& greenRect, sf::RectangleShape& purpleRect,
     int numCirclesAllowed,
-    std::vector<building*>& buildings, // <--- added: actual placed buildings
-    player& player1
+    std::vector<building*>& buildings, std::vector<enemy>& enemies,// actual placed buildings
+    player& player1, WaveManager*& currentWaveManager, bool& waveActive, int& shownWaveNo,float& waveTimer
 ) {
     // main menu code
     if (const auto* keyPress = event.getIf<sf::Event::KeyPressed>()) {
+        if (keyPress->scancode == sf::Keyboard::Scan::S) {
+           saveGame(buildings, player1, shownWaveNo);
+        }
         if (keyPress->scancode == sf::Keyboard::Scan::M) {
             state = GameState::MainMenu;
             placedCircles.clear();
             buildings.clear(); // remove all buildings
+            enemies.clear();
+            if (currentWaveManager) {
+                delete currentWaveManager;
+                currentWaveManager = nullptr;
+            }
+            player1 = player();
+            player1.set_money(500);
+            player1.set_health(15);
+            waveActive = false;
+            shownWaveNo = 0;
+            waveTimer = 0.f;
+            // projectiles.clear();
+            // placedCircles.clear();
             colorSelected = false;
             brownRect.setOutlineColor(sf::Color::Transparent);
             greenRect.setOutlineColor(sf::Color::Transparent);
@@ -266,6 +299,34 @@ void handleGameEvents(
                 int cellY = static_cast<int>((pos.y - offset.y) / gridSize);
                 sf::Vector2i cell(cellX, cellY);
 
+                //upgrading the building code
+                building* existingBuilding = nullptr;  
+                for (auto* b : buildings) {  
+                    sf::Vector2f posB = b->get_position();  
+                    int existingX = static_cast<int>((posB.x - offset.x) / gridSize);  
+                    int existingY = static_cast<int>((posB.y - offset.y) / gridSize);  
+                    if (existingX == cellX && existingY == cellY) {  
+                        if (b->get_color() == selectedColor) {  
+                            existingBuilding = b;  
+                        }
+                        break;  
+                    }
+                }
+
+                if (existingBuilding) {  
+                    if (player1.get_money() >= existingBuilding->get_cost()) {
+                            player1.add_money(-existingBuilding->get_cost()); // deduct cost
+                            existingBuilding->upgrade(); 
+                            std::cout << "Upgraded existing building at (" << cellX << "," << cellY << ")\n"; 
+                        } else {
+                            std::cout << "Nah no money";
+                        }
+                     
+                    return; // Skip new placement 
+                }
+
+
+
                 // Check placement possible if there is correct box and total building is less. size allows to not keep a count of it
                 if (buildings.size() < numCirclesAllowed && currentMap.allowedPlacements.count(cell)) {
                     float centerX = offset.x + cellX * gridSize + gridSize / 2.0f;
@@ -297,7 +358,7 @@ void handleGameEvents(
                         }
                     }
 
-                    // circle visual of bldf
+                    // circle visual of bldg
                     sf::CircleShape newCircle(10.0f);
                     newCircle.setFillColor(selectedColor);
                     newCircle.setOrigin({10.0f, 10.0f});
@@ -347,6 +408,7 @@ void drawGame(
     window.draw(greenText); // the text on them
     window.draw(purpleText);
 }
+
 
 // 
 int main() {
@@ -409,7 +471,7 @@ int main() {
 
 
 
-    std::vector<building*> buildings;  ////// array of builidng point datatype 
+    std::vector<building*> buildings;  ////// array of builidng point datatype  polymorphism
     std::vector<enemy> enemies;
     std::vector<Projectile> projectiles;
 
@@ -461,7 +523,7 @@ int main() {
         else if (gameState == GameState::Playing) {
             handleGameEvents(event, gameState, placedCircles, selectedColor, colorSelected,
                              currentMap, offset, screenWidth, screenHeight, gridSize,
-                             brownRect, greenRect, purpleRect, numCirclesAllowed, buildings,player1);
+                             brownRect, greenRect, purpleRect, numCirclesAllowed, buildings,enemies,player1,currentWaveManager,waveActive, shownWaveNo, waveTimer);
             }
     }
 

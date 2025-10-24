@@ -29,3 +29,9 @@ add_executable(SFMLPROJECT
 
 # Link SFML libraries
 target_link_libraries(SFMLPROJECT PRIVATE SFML::Graphics SFML::Window SFML::System)
+
+
+# Make a folder called build if it isnt there already
+#  go to terminal and go to the folder build if it is there
+# use smake --build .
+#  ./SFMLPROJECT.exe and then it should run and the gsame will be duisplayeds...

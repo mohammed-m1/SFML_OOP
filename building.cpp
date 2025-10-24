@@ -95,6 +95,8 @@
         return lastShot >= fireInterval;
     }; //true if it is
 
+ 
+
     // virtual void upgrade() = 0; // must be implemented by children
 
     // virtual building::~building(){

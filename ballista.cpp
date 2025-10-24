@@ -11,6 +11,8 @@
     void ballista::upgrade() {
         if (level == 1) {
             set_fire_rate(get_fire_rate()*1.5);
+            set_damage(get_damage()*1.5);
+
             level++;
         } else {
             set_fire_rate(get_fire_rate()*1.25);
@@ -23,4 +25,8 @@
         return location;
     }
 
+    // void ballista::upgrade() {
+    //     set_damage(get_damage() * 1.5f);
+    //     level++;
+    // } 
    

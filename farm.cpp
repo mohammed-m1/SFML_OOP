@@ -7,9 +7,9 @@
         color = sf::Color(0, 100, 0); // green
     }
 
-    void farm::upgrade() {
-        farmRate = farmRate + 100;
-    }
+    // void farm::upgrade() {
+    //     farmRate = farmRate + 100;
+    // }
 
     int farm::get_location() {
         return location;
@@ -19,5 +19,14 @@
         return farmRate;
     }
 
+    void farm::upgrade() {
+        if (level == 1) {
+            farmRate = farmRate + 50;
+            level++;
+        } else {
+            farmRate = farmRate + 25;
+            level++;
+        }        
+    }
 
    
